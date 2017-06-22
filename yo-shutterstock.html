@@ -1,4 +1,10 @@
 <link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="../paper-card/paper-card.html">
+<link rel="import" href="../paper-dialog/paper-dialog.html">
+<link rel="import" href="../paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-input/paper-input.html">
 
 <dom-module id="yo-shutterstock">
   <template>
@@ -6,8 +12,66 @@
       :host {
         display: block;
       }
+      /*#cards{
+        @apply --layout-vertical;
+        @apply --layout-wrap;
+        width: 450px;
+        height: 450px;
+      }*/
     </style>
-    <h2>Hello [[prop1]]!</h2>
+   
+   <iron-ajax
+      auto
+      url="{{url}}"
+      handle-as="json"
+      last-response="{{datos}}"
+      headers='{{headers}}'
+      params='{{parameters}}'
+      >
+  </iron-ajax>
+      
+      <template is="dom-if" if="{{validarMediaType('images')}}">
+        <paper-dialog opened>
+          <h2>Selecciona una imagen</h2>
+          <paper-dialog-scrollable>
+             <template is="dom-repeat" items="{{datos.data}}" as="imagen">
+                  <div id="cards">
+                    <paper-card  image="{{imagen.assets.preview.url}}" elevation="1" animated-shadow="false">
+                    </paper-card>
+                  </div>    
+              </template>
+          </paper-dialog-scrollable>
+          <div class="buttons">
+            
+            <paper-input label="query" value="{{query}}"></paper-input>
+            
+            <paper-button>OK</paper-button>
+          </div>
+        </paper-dialog>
+      </template>
+
+      <template is="dom-if" if="{{validarMediaType('videos')}}">       
+        <paper-dialog opened>
+          <h2>Selecciona un video</h2>
+          <paper-dialog-scrollable>
+             <template is="dom-repeat" items="{{datos.data}}" as="video">
+                  <div id="cards">
+                    <paper-card   elevation="1" animated-shadow="false">
+                        <div class="card-content">
+                          <video width="100%" src="{{video.assets.thumb_mp4.url}}" controls autoplay title="{{video.description}}"></video>
+                        </div>
+                        <div class="card-actions">
+                        </div>
+                    </paper-card>
+                  </div>    
+              </template>
+          </paper-dialog-scrollable>
+          <div class="buttons">
+            <paper-button>OK</paper-button>
+          </div>
+        </paper-dialog>
+      </template>
+
   </template>
 
   <script>
@@ -23,11 +87,153 @@
       static get is() { return 'yo-shutterstock'; }
       static get properties() {
         return {
-          prop1: {
+          clientId: {
             type: String,
-            value: 'yo-shutterstock'
+            value: '3352aeffbd24d33f8859',
+            notify: true
+          },
+          clientSecret: {
+            type: String,
+            value: '097f832242ad371d9f012770cabdb1e6cebc433a',
+            notify: true
+          },
+          mediaType:{
+            type:String,
+            value: 'images',
+            notify: true
+          },
+          category:{
+            type:String,
+            notify:true
+          },
+          color:{
+            type:String,
+            notify:true
+          },
+          language:{
+            type:String,
+            notify:true
+          },
+          license:{
+            type:String,
+            notify:true
+          },
+          imageType:{
+            type:String,
+            notify: true
+          },
+          orientation:{
+            type:String,
+            notify: true
+          },
+          page:{
+            type:Number,
+            notify: true
+          },
+          perPage:{
+            type:Number,
+            notify: true
+          },
+          peopleAge:{
+            type:String,
+            notify:true
+          },
+          peopleEthnicity:{
+            type:String,
+            notify:true
+          },
+          peopleGender:{
+            type:String,
+            notify:true
+          },
+          peopleNumber:{
+            type:Number,
+            notify: true
+          },
+          query:{
+            type:String,
+            notify:true
+          },
+          sort:{
+            type:String,
+            notify:true
+          },
+          view:{
+            type:String,
+            notify:true
+          },
+          parameters:{
+            computed: 'computeParameters(category,color,language,license,imageType,orientation,page,perPage,peopleAge,peopleEthnicity,peopleGender,peopleNumber,query,sort,view)'
+          },
+          headers:{
+            type: String,
+            computed:'computeHeaders(clientId, clientSecret)'
+          },
+          url:{
+            type:String,
+            computed: 'computeUrl(mediaType)'
           }
         };
+      }
+      validarMediaType(media){
+        return this.mediaType === media;
+      }
+      computeParameters(category,color,language,license,imageType,orientation,page,perPage,peopleAge,peopleEthnicity,peopleGender,peopleNumber,query,sort,view){
+        var object = {};
+        if(category){
+          object['category'] = category;
+        }
+        if(color){
+          object['color'] = color;
+        }
+        if(language){
+          object['language'] = language;
+        }
+        if(license){
+          object['license'] = license;
+        }
+        if(imageType){
+          object['image_type'] = imageType;
+        }
+        if(orientation){
+          object['orientation'] = orientation;
+        }
+        if(page){
+          object['page'] = page;
+        }
+        if(perPage){
+          object['per_page'] = perPage;
+        }
+        if(peopleAge){
+          object['people_age'] = peopleAge;
+        }
+        if(peopleEthnicity){
+          object['people_ethnicity'] = peopleEthnicity;
+        }
+        if(peopleGender){
+          object['people_gender'] = peopleGender;
+        }
+        if(peopleNumber){
+          object['people_number'] = peopleNumber;
+        }
+        if(query){
+          object['query'] = query;
+        }
+        if(sort){
+          object['sort'] = sort;
+        }
+        if(view){
+          object['view'] = view;
+        }
+        console.log(object);
+        return object;
+      }
+      computeUrl(mediaType){
+        return ['https://api.shutterstock.com/v2', mediaType,'search'].join('/');
+      }
+
+      computeHeaders(clientId,clientSecret){
+        return  {"Authorization": 'Basic ' + window.btoa(clientId + ':' + clientSecret) };
       }
     }
 
